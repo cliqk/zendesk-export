@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/cliqk/zendesk-export/issues"
   },
-  "homepage": "https://github.com/cliqk/zendesk-export#readme"
+  "homepage": "https://github.com/cliqk/zendesk-export#readme",
+  "dependencies": {
+    "node-zendesk": "^1.1.8"
+  }
 }
