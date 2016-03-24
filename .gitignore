@@ -1,6 +1,9 @@
 # App config
 config.json
 
+# Data
+data/*
+
 # Logs
 logs
 *.log
