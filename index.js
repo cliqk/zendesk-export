@@ -1,4 +1,5 @@
 var fs = require('fs');
+var mkdirp = require('mkdirp');
 
 var config;
 fs.readFile('config.json', 'utf8', function (err, data) {
@@ -18,12 +19,18 @@ function start() {
 }
 
 function save(file, data) {
-	
-	// Check data directory
-	fs.stat('data', function(err, stats) {
+	// Remove the file name from the path
+	var path = file.substring(0, file.lastIndexOf('/'));
+	fs.stat(path, function(err, stats) {
 		if (err && err.errno === -2) {
-			// Create the directory
-			fs.mkdir('data');
+			// Create the directory (using mkdirp because we don't have to do any crazy error checking for directory structures)
+			mkdirp(path, function (err) {
+				if (err) {
+					console.error(err);
+				} else {
+					console.log('Created directory: "'+path+'"');
+				}
+			});
 		} else if(err) {
 			// Just in case there was a different error
 			console.log(err);
