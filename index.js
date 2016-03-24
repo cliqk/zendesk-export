@@ -16,7 +16,7 @@ fs.readFile('config.json', 'utf8', function (err, data) {
 	});
 	
 	// Run get users
-	getUsers();
+	// getUsers();
 
 	// Run get tickets
 	getTickets();
