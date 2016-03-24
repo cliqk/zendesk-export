@@ -1,22 +1,26 @@
-var fs = require('fs');
-var mkdirp = require('mkdirp');
+var fs = require('fs'),
+	mkdirp = require('mkdirp'),
+	zendesk = require('node-zendesk'),
+	client;
 
-var config;
+// Read configuration files
 fs.readFile('config.json', 'utf8', function (err, data) {
 	if (err) throw err;
-	config = JSON.parse(data);
-	start();
-});
+	var config = JSON.parse(data);
 
-function start() {
-	// Make sure all the files exist
+	// Setup the Zendesk client
+	client = zendesk.createClient({
+		username:  config.username,
+		token:     config.token,
+		remoteUri: 'https://'+config.domain+'/api/v2'
+	});
 	
 	// Run get users
 	getUsers();
 
 	// Run get tickets
 	getTickets();
-}
+});
 
 function save(file, data) {
 	// Remove the file name from the path
@@ -50,14 +54,6 @@ function save(file, data) {
 }
 
 function getUsers() {
-	var zendesk = require('node-zendesk');
-
-	var client = zendesk.createClient({
-		username:  config.username,
-		token:     config.token,
-		remoteUri: 'https://'+config.domain+'/api/v2'
-	});
-
 	client.users.list(function (err, req, result) {
 		if (err) {
 			console.log(err);
@@ -65,26 +61,43 @@ function getUsers() {
 		}
 
 		// Save the data to the users file
-		save('data/users.json', JSON.stringify(result, null, 2));
+		save('data/users/all-users.json', JSON.stringify(result, null, 2));
+		for (var i = 0; i < result.length; i++) {
+			if(i < 3) {
+				save('data/users/'+result[i].id+'.json', JSON.stringify(result[i], null, 2));
+			}
+		}
 	});
 }
 
 function getTickets() {
-	var zendesk = require('node-zendesk');
-
-	var client = zendesk.createClient({
-		username:  config.username,
-		token:     config.token,
-		remoteUri: 'https://'+config.domain+'/api/v2'
-	});
-
 	client.tickets.list(function (err, req, result) {
 		if (err) {
 			console.log(err);
 			return;
 		}
 
-		// Save the data to the users file
-		save('data/tickets.json', JSON.stringify(result, null, 2));
+		// Save the tickets to the tickets file
+		save('data/tickets/all-tickets.json', JSON.stringify(result, null, 2));
+
+		// Loop through all of the tickets and get their comments
+		for (var i = 0; i < result.length; i++) {
+			if(i < 3) {
+				getComments(result[i]);
+			}
+		}
+	});
+}
+
+function getComments(ticket) {
+	save('data/tickets/'+ticket.id+'.json', JSON.stringify(ticket, null, 2));
+	client.tickets.getComments(ticket.id, function (err, req, result) {
+		if (err) {
+			console.log(err);
+			return;
+		}
+		
+		// Save the comments to a file
+		save('data/tickets/'+ticket.id+'-comments.json', JSON.stringify(result, null, 2));
 	});
 }
