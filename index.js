@@ -83,8 +83,10 @@ function getTickets() {
 
 		// Loop through all of the tickets and get their comments
 		for (var i = 0; i < result.length; i++) {
-			save('data/tickets/'+result[i].id+'.json', JSON.stringify(result[i], null, 2));
-			getComments(result[i]);
+			if(i > result.length - 5) {
+				save('data/tickets/'+result[i].id+'.json', JSON.stringify(result[i], null, 2));
+				getComments(result[i]);
+			}
 		}
 	});
 }
@@ -97,6 +99,13 @@ function getComments(ticket) {
 		}
 		
 		// Save the comments to a file
-		save('data/tickets/'+ticket.id+'-comments.json', JSON.stringify(result, null, 2));
+		var comments = result[0].comments;
+		save('data/tickets/'+ticket.id+'-comments.json', JSON.stringify(comments, null, 2));
+
+		for (var i = 0; i < comments.length; i++) {
+			if(typeof(comments[i].attachments) != 'undefined' && comments[i].attachments.length > 0) {
+				console.log('Comment '+comments[i].id+' on ticket '+ticket.id+' has attachments.');
+			}
+		}
 	});
 }
