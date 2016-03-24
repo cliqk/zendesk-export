@@ -66,9 +66,7 @@ function getUsers() {
 		// Save the data to the users file
 		save('data/users/all-users.json', JSON.stringify(result, null, 2));
 		for (var i = 0; i < result.length; i++) {
-			if(i < 3) {
-				save('data/users/'+result[i].id+'.json', JSON.stringify(result[i], null, 2));
-			}
+			save('data/users/'+result[i].id+'.json', JSON.stringify(result[i], null, 2));
 		}
 	});
 }
@@ -85,15 +83,13 @@ function getTickets() {
 
 		// Loop through all of the tickets and get their comments
 		for (var i = 0; i < result.length; i++) {
-			if(i < 3) {
-				getComments(result[i]);
-			}
+			save('data/tickets/'+result[i].id+'.json', JSON.stringify(result[i], null, 2));
+			getComments(result[i]);
 		}
 	});
 }
 
 function getComments(ticket) {
-	save('data/tickets/'+ticket.id+'.json', JSON.stringify(ticket, null, 2));
 	client.tickets.getComments(ticket.id, function (err, req, result) {
 		if (err) {
 			console.log(err);
