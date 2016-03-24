@@ -12,6 +12,9 @@ function start() {
 	
 	// Run get users
 	getUsers();
+
+	// Run get tickets
+	getTickets();
 }
 
 function save(file, data) {
@@ -29,25 +32,12 @@ function save(file, data) {
 		}
 	});
 
-	// Check if the file exists
-	fs.stat(file, function(err, stats) {
-		if (err && err.errno === -2) {
-			// Create the directory
-			fs.closeSync(fs.openSync(file, 'w'));
-		} else if(err) {
-			// Just in case there was a different error
-			console.log(err);
-		} else {
-			// File exists
-		}
-	});
-
-	// Finally, we can append the data to the file
-	fs.appendFile(file, data, function(err) {
+	// Save the file
+	fs.writeFile(file, data, function(err) {
 		if(err) {
 			console.error(err);
 		} else {
-			console.log('Appended!');
+			console.log(file+' saved.');
 		}
 	});
 }
@@ -69,5 +59,25 @@ function getUsers() {
 
 		// Save the data to the users file
 		save('data/users.json', JSON.stringify(result, null, 2));
+	});
+}
+
+function getTickets() {
+	var zendesk = require('node-zendesk');
+
+	var client = zendesk.createClient({
+		username:  config.username,
+		token:     config.token,
+		remoteUri: 'https://'+config.domain+'/api/v2'
+	});
+
+	client.tickets.list(function (err, req, result) {
+		if (err) {
+			console.log(err);
+			return;
+		}
+
+		// Save the data to the users file
+		save('data/tickets.json', JSON.stringify(result, null, 2));
 	});
 }
