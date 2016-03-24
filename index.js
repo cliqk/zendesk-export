@@ -33,6 +33,7 @@ function save(file, data) {
 					console.error(err);
 				} else {
 					console.log('Created directory: "'+path+'"');
+					saveFile();
 				}
 			});
 		} else if(err) {
@@ -40,17 +41,19 @@ function save(file, data) {
 			console.log(err);
 		} else {
 			// Directory exists
+			saveFile();
 		}
 	});
-
-	// Save the file
-	fs.writeFile(file, data, function(err) {
-		if(err) {
-			console.error(err);
-		} else {
-			console.log(file+' saved.');
-		}
-	});
+	function saveFile() {	
+		// Save the file
+		fs.writeFile(file, data, function(err) {
+			if(err) {
+				console.error(err);
+			} else {
+				console.log(file+' saved.');
+			}
+		});
+	}
 }
 
 function getUsers() {
