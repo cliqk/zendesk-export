@@ -1,7 +1,10 @@
 var fs = require('fs'),
-	mkdirp = require('mkdirp'),
-	zendesk = require('node-zendesk'),
-	client;
+mkdirp = require('mkdirp'),
+zendesk = require('node-zendesk'),
+client,
+httpService = require('https'),
+url = require('url'),
+request = require('request');
 
 // Read configuration files
 fs.readFile('config.json', 'utf8', function (err, data) {
@@ -57,18 +60,18 @@ function save(file, data) {
 }
 
 function getUsers() {
-	client.users.list(function (err, req, result) {
-		if (err) {
-			console.log(err);
-			return;
-		}
+	// client.users.list(function (err, req, result) {
+	// 	if (err) {
+	// 		console.log(err);
+	// 		return;
+	// 	}
 
-		// Save the data to the users file
-		save('data/users/all-users.json', JSON.stringify(result, null, 2));
-		for (var i = 0; i < result.length; i++) {
-			save('data/users/'+result[i].id+'.json', JSON.stringify(result[i], null, 2));
-		}
-	});
+	// 	// Save the data to the users file
+	// 	save('data/users/all-users.json', JSON.stringify(result, null, 2));
+	// 	for (var i = 0; i < result.length; i++) {
+	// 		save('data/users/'+result[i].id+'.json', JSON.stringify(result[i], null, 2));
+	// 	}
+	// });
 }
 
 function getTickets() {
@@ -105,7 +108,48 @@ function getComments(ticket) {
 		for (var i = 0; i < comments.length; i++) {
 			if(typeof(comments[i].attachments) != 'undefined' && comments[i].attachments.length > 0) {
 				console.log('Comment '+comments[i].id+' on ticket '+ticket.id+' has attachments.');
+				getAttachments(comments[i].attachments, ticket.id, comments[i].id);
 			}
 		}
 	});
+}
+
+function getAttachments(attachments, ticketID, commentID) {
+	for (var i = 0; i < attachments.length; i++) {
+		var fileName = attachments[i].file_name;
+		var path = 'data/tickets/' + ticketID + '-' + commentID + '-' + attachments[i].id;
+		var fileUrl = attachments[i].content_url;
+		fs.stat(path, function(err, stats) {
+			if (err && err.errno === -2) {
+				// Create the directory (using mkdirp because we don't have to do any crazy error checking for directory structures)
+				mkdirp(path, function (err) {
+					if (err) {
+						console.error(err);
+					} else {
+						console.log('Created directory: "'+path+'"');
+						saveFile();
+					}
+				});
+			} else if(err) {
+				// Just in case there was a different error
+				console.log(err);
+			} else {
+				// Directory exists
+				saveFile();
+			}
+		});
+
+		function saveFile() {	
+			// Save the file
+			var options = {
+				host: url.parse(fileUrl).host,
+				path: url.parse(fileUrl).pathname,
+				rejectUnauthorized: false
+			};
+
+			var file = fs.createWriteStream(path + '/' +fileName);
+			file.on('error', function(err) { console.log(err); });
+			request(fileUrl).pipe(file);
+		} 
+	}
 }

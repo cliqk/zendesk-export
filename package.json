@@ -22,6 +22,7 @@
   "homepage": "https://github.com/cliqk/zendesk-export#readme",
   "dependencies": {
     "mkdirp": "^0.5.1",
-    "node-zendesk": "^1.1.8"
+    "node-zendesk": "^1.1.8",
+    "request": "^2.69.0"
   }
 }
