@@ -19,7 +19,7 @@ fs.readFile('config.json', 'utf8', function (err, data) {
 	});
 	
 	// Run get users
-	// getUsers();
+	getUsers();
 
 	// Run get tickets
 	getTickets();
@@ -60,18 +60,18 @@ function save(file, data) {
 }
 
 function getUsers() {
-	// client.users.list(function (err, req, result) {
-	// 	if (err) {
-	// 		console.log(err);
-	// 		return;
-	// 	}
+	client.users.list(function (err, req, result) {
+		if (err) {
+			console.log(err);
+			return;
+		}
 
-	// 	// Save the data to the users file
-	// 	save('data/users/all-users.json', JSON.stringify(result, null, 2));
-	// 	for (var i = 0; i < result.length; i++) {
-	// 		save('data/users/'+result[i].id+'.json', JSON.stringify(result[i], null, 2));
-	// 	}
-	// });
+		// Save the data to the users file
+		save('data/users/all-users.json', JSON.stringify(result, null, 2));
+		for (var i = 0; i < result.length; i++) {
+			save('data/users/'+result[i].id+'.json', JSON.stringify(result[i], null, 2));
+		}
+	});
 }
 
 function getTickets() {
