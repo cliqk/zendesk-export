@@ -129,9 +129,9 @@ function mkdir(file, callback) {
  * @param  {function} callback a callback function which gets passed the parsed file
  * @return NULL
  */
-function read(path, callback) {
-	fs.readFile(path, function (error, data) {
-		if (error) {console.log(error); return;}
+function read(file, callback) {
+	fs.readFile(file, function (error, data) {
+		if (error) {console.log('Error reading file '+file+': '+error); return;}
 		try {
 			var file = JSON.parse(data);
 		} catch(error) {
@@ -159,7 +159,7 @@ function download(uri, file, callback) {
 	}
 	request
 		.get(options) // Pass options
-		.on('error', function(error) { console.log(error); return;}) //
+		.on('error', function(error) {console.log('Error downloading file '+file+' <'+uri+'>: '+error); return;}) //
 		.pipe(fs.createWriteStream(file)) // Write the pipe to a file stream
 		.on('finish', function() {
 			if (callback) {callback(file)} // Run the callback if it was passed
@@ -181,7 +181,7 @@ function save(object, file, callback) {
 		return;
 	}
 	fs.writeFile(file, data, function(error) {
-		if (error) {console.log(error); return;}
+		if (error) {console.log('Error saving file '+file+': '+error); return;}
 		if (callback) { callback(file) } // Run the callback if it was passed
 	});
 }
@@ -192,7 +192,7 @@ function save(object, file, callback) {
  */
 function getUser(userId) {
 	client.users.show(userId, function (error, req, res) {
-		if (error) {console.log(error); return;}
+		if (error) {console.log('Error getting user '+userID+': '+error); return;}
 		saveUser(res);
 	});
 }
@@ -203,7 +203,7 @@ function getUser(userId) {
  */
 function getUsers() {
 	client.users.list(function (error, req, res) {
-		if (error) {console.log(error); return;}
+		if (error) {console.log('Error getting all users: '+error); return;}
 		for (var i = 0; i < res.length; i++) {
 			saveUser(res[i]);
 		}
@@ -229,7 +229,7 @@ function saveUser(user) {
  */
 function getTicket(ticketId) {
 	client.tickets.show(ticketId, function (error, req, res) {
-		if (error) {console.log(error); return;}
+		if (error) {console.log('Error getting ticket '+ticketId+': '+error); return;}
 		saveTicket(res);
 	});
 }
@@ -240,7 +240,7 @@ function getTicket(ticketId) {
  */
 function getTickets() {
 	client.tickets.list(function (error, req, res) {
-		if (error) {console.log(error); return;}
+		if (error) {console.log('Error getting all tickets: '+error); return;}
 		for (var i = 0; i < res.length; i++) {
 			saveTicket(res[i]);
 		}
@@ -269,7 +269,7 @@ function saveTicket(ticket) {
  */
 function getComments(ticketId) {
 	client.tickets.getComments(ticketId, function (error, req, res) {
-		if (error) {console.log(error); return;}
+		if (error) {console.log('Error getting comments for ticket '+ticketId+': '+error); return;}
 		var comments = res[0].comments;
 		for (var i = 0; i < comments.length; i++) {
 			saveComment(comments[i], ticketId);
