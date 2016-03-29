@@ -14,24 +14,24 @@ var client = zendesk.createClient({
 	remoteUri: 'https://'+config.domain+'/api/v2'
 });
 
-initPrompt(true); // Run the command prompt init
+resetPrompt(true); // Run the command prompt init
 
 /**
  * Initializes the command prompt and handles which command to accept
- * @param BOOLEAN init if set, this is the initialization
- * @return NULL
+ * @param {boolean} init If set to true, this is the initialization call and will display our app intro
  */
-function initPrompt(init) {
+function resetPrompt(init) {
 	prompt.start();
 	if (init) {
-		prompt.message = colors.green('Zendesk Export\n©2016 Cliqk, Inc.\nMIT License\n(type help too see a list of commands)\n');
+		prompt.message = colors.magenta('Zendesk Export\n©2016 Cliqk, Inc.\nMIT License\n')+colors.gray('type help too see a list of commands\n');
 	} else {
 		prompt.message = '';
 	}
 	prompt.delimiter = '';
 	var command = {
 		'name': 'command',
-		'message': colors.white('Command:')
+		'message': colors.white('Command:'),
+		'hidden' : true
 	}
 	prompt.get([command], function (error, result) {
 		if (error) throw error;
@@ -80,38 +80,50 @@ function initPrompt(init) {
 	});
 }
 
-function resetPrompt() {
-	initPrompt();
+/**
+ * Takes a file path and checks if it exists
+ * @param {string} file Path of the file to check
+ * @callback callback Passed true (already exists) or false (doesn't exist)
+ */
+function check(file, callback) {
+	fs.stat(file, function(error, stat) {
+		if(error == null) {
+			callback(true);
+		} else if(error.code == 'ENOENT') {
+			callback(false);
+		} else {
+			console.log('Error checking file: ', error.code);
+		}
+	});
 }
 
 /**
- * Takes a file path and checks/creates a directory structure for that path
- * @param  {string}   file     the path of the file to be converted into a directory structure
- * @param  {function} callback a callback function which gets passed the created path
- * @return NULL
+ * Takes a file path and creates a directory structure for that path if it doesn't already exist
+ * @param {string} file Path of the file to be converted into a directory structure
+ * @callback callback Passed the created path
  */
-function check(file, callback) {
+function mkdir(file, callback) {
+	var path = '';
 	try {
-		var path = file.substring(0, file.lastIndexOf('/')); // Remove the filename from the end of the file path
+		path = file.substring(0, file.lastIndexOf('/')); // Remove the filename from the end of the file path
 	} catch(error) {
 		console.log(error);
 		return;
 	}
 	mkdirp(path, function (error) {
 		if (error) {console.log(error); return;}
-		callback(path); // Run the callback
+		if (callback) {callback(path)} // Run the callback if it was passed
 	});
 }
 
 /**
  * Takes a file path for a JSON file and returns it as an object in memory.
- * @param  {string}   path     the path of the file to read
- * @param  {function} callback a callback function which gets passed the parsed file
- * @return NULL
+ * @param {string} file Path of the file to read
+ * @callback callback Passed the parsed file
  */
-function read(path, callback) {
-	fs.readFile(path, function (error, data) {
-		if (error) {console.log(error); return;}
+function read(file, callback) {
+	fs.readFile(file, function (error, data) {
+		if (error) {console.log('Error reading file '+file+': '+error); return;}
 		try {
 			var file = JSON.parse(data);
 		} catch(error) {
@@ -124,34 +136,36 @@ function read(path, callback) {
 
 /**
  * Takes an URI and file name/path and downloads it to the specified path using your credentials
- * @param  {string}   uri      full URI for the content including protocol and path
- * @param  {string}   file     full or relative path where the downloaded content should be saved
- * @param  {function} callback a callback function which gets passed the path where the content was saved
- * @return NULL
+ * @param {string} uri Full URI for the content including protocol and path
+ * @param {string} file Full or relative path where the downloaded content should be saved
+ * @callback callback Passed the path where the content was saved
  */
 function download(uri, file, callback) {
-	var options = { // Set request options
-		'uri': uri,
-		'auth': {
-			'username': config.username,
-			'password': config.token
+	check(file, function(exists) {
+		if (!exists) {
+		var options = { // Set request options
+			'uri': uri,
+			'auth': {
+				'username': config.username,
+				'password': config.token
+			}
 		}
-	}
-	request
-		.get(options) // Pass options
-		.on('error', function(error) { console.log(error); return;}) //
-		.pipe(fs.createWriteStream(file)) // Write the pipe to a file stream
-		.on('finish', function() {
-			if (callback) {callback(file)}; // Run the callback if it was passed
-		});
+		request
+			.get(options) // Pass options
+			.on('error', function(error) {console.log('Error downloading file '+file+' <'+uri+'>: '+error); return;}) //
+			.pipe(fs.createWriteStream(file)) // Write the pipe to a file stream
+			.on('finish', function() {
+				if (callback) {callback(file)} // Run the callback if it was passed
+			});
+		}
+	});
 }
 
 /**
  * Takes an object and file name/path and saves it as JSON to the specified path
- * @param  {string}   uri      full URI for the content including protocol and path
- * @param  {string}   file     full or relative path where the downloaded content should be saved
- * @param  {function} callback a callback function which gets passed the path where the content was saved
- * @return NULL
+ * @param {Object} object An Object to convert and save as JSON
+ * @param {string} file Full or relative path where the downloaded content should be saved
+ * @callback callback Passed the path where the content was saved
  */
 function save(object, file, callback) {
 	try {
@@ -161,29 +175,28 @@ function save(object, file, callback) {
 		return;
 	}
 	fs.writeFile(file, data, function(error) {
-		if (error) {console.log(error); return;}
-		if (callback) { callback(file) }; // Run the callback if it was passed
+		if (error) {console.log('Error saving file '+file+': '+error); return;}
+		if (callback) { callback(file) } // Run the callback if it was passed
 	});
 }
 
 /**
  * Gets a specific user from Zendesk and passes the user to the saveUser function
- * @return NULL
+ * @param {integer} userId The ID of the user to save
  */
 function getUser(userId) {
 	client.users.show(userId, function (error, req, res) {
-		if (error) {console.log(error); return;}
+		if (error) {console.log('Error getting user '+userID+': '+error); return;}
 		saveUser(res);
 	});
 }
 
 /**
  * Gets all users from Zendesk and passes each user to the saveUser function
- * @return NULL
  */
 function getUsers() {
 	client.users.list(function (error, req, res) {
-		if (error) {console.log(error); return;}
+		if (error) {console.log('Error getting all users: '+error); return;}
 		for (var i = 0; i < res.length; i++) {
 			saveUser(res[i]);
 		}
@@ -192,33 +205,36 @@ function getUsers() {
 
 /**
  * Takes a user object and saves it to a file with that user's ID
- * @return NULL
+ * @param {Object} user A user object
  */
 function saveUser(user) {
 	var file = 'data/users/'+user.id+'.json'; // Path for users JSON
-	check(file, function() { // Check to see if directory exists
-		save(user, file); // Save the data to the file
+	check(file, function(exists) { // Check to see if directory exists
+		if(!exists) {
+			mkdir(file, function() {
+				save(user, file); // Save the data to the file
+			});
+		}
 	});
 }
 
 /**
  * Gets a specific ticket from Zendesk and passes the ticket to the saveTicket function
- * @return NULL
+ * @param {integer} ticketId The ID of the ticket to save
  */
 function getTicket(ticketId) {
 	client.tickets.show(ticketId, function (error, req, res) {
-		if (error) {console.log(error); return;}
+		if (error) {console.log('Error getting ticket '+ticketId+': '+error); return;}
 		saveTicket(res);
 	});
 }
 
 /**
  * Gets all tickets from Zendesk and passes each ticket to the saveTicket function
- * @return NULL
  */
 function getTickets() {
 	client.tickets.list(function (error, req, res) {
-		if (error) {console.log(error); return;}
+		if (error) {console.log('Error getting all tickets: '+error); return;}
 		for (var i = 0; i < res.length; i++) {
 			saveTicket(res[i]);
 		}
@@ -227,25 +243,27 @@ function getTickets() {
 
 /**
  * Takes a ticket object and saves it to a file inside a directory with that ticket's ID, then further gets comments on that ticket
- * @param {Object} ticket a ticket object
- * @return NULL
+ * @param {Object} ticket A ticket object
  */
 function saveTicket(ticket) {
 	var file = 'data/tickets/'+ticket.id+'/ticket.json'; // Path for ticket JSON
-	check(file, function() { // Check to see if directory exists
-		save(ticket, file); // Save the data to the file
+	check(file, function(exists) { // Check to see if directory exists
+		if(!exists) {
+			mkdir(file, function() {
+				save(ticket, file); // Save the data to the file
+			});
+		}
 		getComments(ticket.id); // Get the comments for this ticket
 	});
 }
 
 /**
  * Takes a ticket ID and gets all that ticket's comments from Zendesk, then passes each comment to the saveComment function
- * @param {integer} ticketId the ID of the ticket to get comments from
- * @return NULL
+ * @param {integer} ticketId The ID of the ticket which contains the desired comment(s)
  */
 function getComments(ticketId) {
 	client.tickets.getComments(ticketId, function (error, req, res) {
-		if (error) {console.log(error); return;}
+		if (error) {console.log('Error getting comments for ticket '+ticketId+': '+error); return;}
 		var comments = res[0].comments;
 		for (var i = 0; i < comments.length; i++) {
 			saveComment(comments[i], ticketId);
@@ -255,39 +273,49 @@ function getComments(ticketId) {
 
 /**
  * Takes a comment object and ticket ID and saves it to a file inside a directory with that comments's ID inside a directory with the current ticket's ID, then further checks for attachments on that comment
- * @param {Object}   comment  the comment object you want to save
- * @param {ticketId} ticketId the ID of the ticket you want to save this comment to
- * @return NULL
+ * @param {Object} comment Comment object you want to save
+ * @param {ticketId} ticketId The ID of the ticket you want to save this comment to
  */
 function saveComment(comment, ticketId) {
 	var file = 'data/tickets/'+ticketId+'/comments/'+comment.id+'/comment.json'; // Path for comment JSON
-	check(file, function() { // Check to see if directory exists
-		save(comment, file); // Save the data to the file
+	check(file, function(exists) { // Check to see if directory exists
+		if(!exists) {
+			mkdir(file, function() {
+				save(comment, file); // Save the data to the file
+			});
+		}
 		getCommentFiles(comment, ticketId);
 	});
 }
 
 /**
- * Takes a comment object and ticket ID and searches for attachments or voice recordings
- * @param {Object}   comment  the comment object you want to search for attachments
- * @param {ticketId} ticketId the ID of the ticket you want to save these attachments comment to
- * @return NULL
+ * Takes a comment object and ticket ID and searches for / downloads attachments or voice recordings
+ * @param {Object} comment Comment object you want to search for attachments
+ * @param {ticketId} ticketId The ID of the ticket these attachments belong to
  */
 function getCommentFiles(comment, ticketId) {
 	if (comment.attachments.length > 0) { // Check if this comment has attachments
 		for (var i = 0; i < comment.attachments.length; i++) {
 			var uri = comment.attachments[i].content_url;
 			var file = 'data/tickets/'+ticketId+'/comments/'+comment.id+'/attachments/'+comment.attachments[i].id+'/'+comment.attachments[i].file_name;
-			check(file, function() { // Check to see if directory exists
-				download(uri, file);
+			check(file, function(exists) { // Check to see if directory exists
+				if(!exists) {
+					mkdir(file, function() {
+						download(uri, file);
+					});
+				}
 			});
 		}
 	}
 	if (typeof(comment.data) != 'undefined' && typeof(comment.data.recording_url) != 'undefined' && comment.data.recording_url) { // Check if this comment has a recording URL
 		var uri = comment.data.recording_url;
 		var file = 'data/tickets/'+ticketId+'/comments/'+comment.id+'/recordings/'+comment.data.call_id+'.mp3';
-		check(file, function() { // Check to see if directory exists
-			download(uri, file);
+		check(file, function(exists) { // Check to see if directory exists
+			if(!exists) {
+				mkdir(file, function() {
+					download(uri, file);
+				});
+			}
 		});
 	}
 }
