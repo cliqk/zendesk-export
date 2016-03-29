@@ -256,7 +256,9 @@ function saveTicket(ticket) {
 	var file = 'data/tickets/'+ticket.id+'/ticket.json'; // Path for ticket JSON
 	check(file, function(exists) { // Check to see if directory exists
 		if(!exists) {
-			save(ticket, file); // Save the data to the file
+			mkdir(file, function() {
+				save(ticket, file); // Save the data to the file
+			});
 		}
 		getComments(ticket.id); // Get the comments for this ticket
 	});
@@ -287,7 +289,9 @@ function saveComment(comment, ticketId) {
 	var file = 'data/tickets/'+ticketId+'/comments/'+comment.id+'/comment.json'; // Path for comment JSON
 	check(file, function(exists) { // Check to see if directory exists
 		if(!exists) {
-			save(comment, file); // Save the data to the file
+			mkdir(file, function() {
+				save(comment, file); // Save the data to the file
+			});
 		}
 		getCommentFiles(comment, ticketId);
 	});
@@ -306,7 +310,9 @@ function getCommentFiles(comment, ticketId) {
 			var file = 'data/tickets/'+ticketId+'/comments/'+comment.id+'/attachments/'+comment.attachments[i].id+'/'+comment.attachments[i].file_name;
 			check(file, function(exists) { // Check to see if directory exists
 				if(!exists) {
-					download(uri, file);
+					mkdir(file, function() {
+						download(uri, file);
+					});
 				}
 			});
 		}
@@ -316,7 +322,9 @@ function getCommentFiles(comment, ticketId) {
 		var file = 'data/tickets/'+ticketId+'/comments/'+comment.id+'/recordings/'+comment.data.call_id+'.mp3';
 		check(file, function(exists) { // Check to see if directory exists
 			if(!exists) {
-				download(uri, file);
+				mkdir(file, function() {
+					download(uri, file);
+				});
 			}
 		});
 	}
