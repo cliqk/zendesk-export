@@ -18,8 +18,7 @@ resetPrompt(true); // Run the command prompt init
 
 /**
  * Initializes the command prompt and handles which command to accept
- * @param BOOLEAN init if set, this is the initialization
- * @return NULL
+ * @param {boolean} init If set to true, this is the initialization call and will display our app intro
  */
 function resetPrompt(init) {
 	prompt.start();
@@ -83,9 +82,8 @@ function resetPrompt(init) {
 
 /**
  * Takes a file path and checks if it exists
- * @param  {string}   file     the path of the file to check
- * @param  {function} callback a callback function which will get passed true (already exists) or false (doesn't exist)
- * @return NULL
+ * @param  {string} file Path of the file to check
+ * @param  {function} callback A function to run which gets passed true (already exists) or false (doesn't exist) once async has finished executing
  */
 function check(file, callback) {
 	fs.stat(file, function(error, stat) {
@@ -101,9 +99,8 @@ function check(file, callback) {
 
 /**
  * Takes a file path and creates a directory structure for that path if it doesn't already exist
- * @param  {string}   file     the path of the file to be converted into a directory structure
- * @param  {function} callback a callback function which gets passed the created path
- * @return NULL
+ * @param  {string} file Path of the file to be converted into a directory structure
+ * @param  {function|undefined} callback A function to run which gets passed the created path once async has finished executing
  */
 function mkdir(file, callback) {
 	var path = '';
@@ -121,9 +118,8 @@ function mkdir(file, callback) {
 
 /**
  * Takes a file path for a JSON file and returns it as an object in memory.
- * @param  {string}   file     the path of the file to read
- * @param  {function} callback a callback function which gets passed the parsed file
- * @return NULL
+ * @param  {string} file Path of the file to read
+ * @param  {function} callback A function to run which gets passed the parsed file once async has finished executing
  */
 function read(file, callback) {
 	fs.readFile(file, function (error, data) {
@@ -140,10 +136,9 @@ function read(file, callback) {
 
 /**
  * Takes an URI and file name/path and downloads it to the specified path using your credentials
- * @param  {string}   uri      full URI for the content including protocol and path
- * @param  {string}   file     full or relative path where the downloaded content should be saved
- * @param  {function} callback a callback function which gets passed the path where the content was saved
- * @return NULL
+ * @param  {string} uri Full URI for the content including protocol and path
+ * @param  {string} file Full or relative path where the downloaded content should be saved
+ * @param  {function|undefined} callback A function to run which gets passed the path where the content was saved once async has finished executing
  */
 function download(uri, file, callback) {
 	check(file, function(exists) {
@@ -168,10 +163,9 @@ function download(uri, file, callback) {
 
 /**
  * Takes an object and file name/path and saves it as JSON to the specified path
- * @param  {string}   uri      full URI for the content including protocol and path
- * @param  {string}   file     full or relative path where the downloaded content should be saved
- * @param  {function} callback a callback function which gets passed the path where the content was saved
- * @return NULL
+ * @param  {Object} object An Object to convert and save as JSON
+ * @param  {string} file Full or relative path where the downloaded content should be saved
+ * @param  {function|undefined} callback A function to run which gets passed the path where the content was saved once async has finished executing
  */
 function save(object, file, callback) {
 	try {
@@ -188,7 +182,7 @@ function save(object, file, callback) {
 
 /**
  * Gets a specific user from Zendesk and passes the user to the saveUser function
- * @return NULL
+ * @param {int} userId The ID of the user to save
  */
 function getUser(userId) {
 	client.users.show(userId, function (error, req, res) {
@@ -199,7 +193,6 @@ function getUser(userId) {
 
 /**
  * Gets all users from Zendesk and passes each user to the saveUser function
- * @return NULL
  */
 function getUsers() {
 	client.users.list(function (error, req, res) {
@@ -212,7 +205,7 @@ function getUsers() {
 
 /**
  * Takes a user object and saves it to a file with that user's ID
- * @return NULL
+ * @param {Object} user A user object
  */
 function saveUser(user) {
 	var file = 'data/users/'+user.id+'.json'; // Path for users JSON
@@ -227,7 +220,7 @@ function saveUser(user) {
 
 /**
  * Gets a specific ticket from Zendesk and passes the ticket to the saveTicket function
- * @return NULL
+ * @param {int} ticketId The ID of the ticket to save
  */
 function getTicket(ticketId) {
 	client.tickets.show(ticketId, function (error, req, res) {
@@ -238,7 +231,6 @@ function getTicket(ticketId) {
 
 /**
  * Gets all tickets from Zendesk and passes each ticket to the saveTicket function
- * @return NULL
  */
 function getTickets() {
 	client.tickets.list(function (error, req, res) {
@@ -251,8 +243,7 @@ function getTickets() {
 
 /**
  * Takes a ticket object and saves it to a file inside a directory with that ticket's ID, then further gets comments on that ticket
- * @param {Object} ticket a ticket object
- * @return NULL
+ * @param {Object} ticket A ticket object
  */
 function saveTicket(ticket) {
 	var file = 'data/tickets/'+ticket.id+'/ticket.json'; // Path for ticket JSON
@@ -268,8 +259,7 @@ function saveTicket(ticket) {
 
 /**
  * Takes a ticket ID and gets all that ticket's comments from Zendesk, then passes each comment to the saveComment function
- * @param {integer} ticketId the ID of the ticket to get comments from
- * @return NULL
+ * @param {int} ticketId The ID of the ticket which contains the desired comment(s)
  */
 function getComments(ticketId) {
 	client.tickets.getComments(ticketId, function (error, req, res) {
@@ -283,9 +273,8 @@ function getComments(ticketId) {
 
 /**
  * Takes a comment object and ticket ID and saves it to a file inside a directory with that comments's ID inside a directory with the current ticket's ID, then further checks for attachments on that comment
- * @param {Object}   comment  the comment object you want to save
- * @param {ticketId} ticketId the ID of the ticket you want to save this comment to
- * @return NULL
+ * @param {Object} comment Comment object you want to save
+ * @param {ticketId} ticketId The ID of the ticket you want to save this comment to
  */
 function saveComment(comment, ticketId) {
 	var file = 'data/tickets/'+ticketId+'/comments/'+comment.id+'/comment.json'; // Path for comment JSON
@@ -300,10 +289,9 @@ function saveComment(comment, ticketId) {
 }
 
 /**
- * Takes a comment object and ticket ID and searches for attachments or voice recordings
- * @param {Object}   comment  the comment object you want to search for attachments
- * @param {ticketId} ticketId the ID of the ticket you want to save these attachments comment to
- * @return NULL
+ * Takes a comment object and ticket ID and searches for / downloads attachments or voice recordings
+ * @param {Object} comment Comment object you want to search for attachments
+ * @param {ticketId} ticketId The ID of the ticket these attachments belong to
  */
 function getCommentFiles(comment, ticketId) {
 	if (comment.attachments.length > 0) { // Check if this comment has attachments
