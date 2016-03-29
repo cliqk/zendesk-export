@@ -31,7 +31,8 @@ function initPrompt(init) {
 	prompt.delimiter = '';
 	var command = {
 		'name': 'command',
-		'message': colors.white('Command:')
+		'message': colors.white('Command:'),
+		'hidden' : true
 	}
 	prompt.get([command], function (error, result) {
 		if (error) throw error;
