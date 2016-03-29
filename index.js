@@ -96,7 +96,6 @@ function check(file, callback) {
 			callback(true);
 		} else if(error.code == 'ENOENT') {
 			callback(false);
-			mkdir(file, function(path){ console.log('creating path...')});
 		} else {
 			console.log('Error checking file: ', error.code);
 		}
