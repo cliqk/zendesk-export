@@ -150,20 +150,24 @@ function read(file, callback) {
  * @return NULL
  */
 function download(uri, file, callback) {
-	var options = { // Set request options
-		'uri': uri,
-		'auth': {
-			'username': config.username,
-			'password': config.token
+	check(file, function(exists) {
+		if (!exists) {
+		var options = { // Set request options
+			'uri': uri,
+			'auth': {
+				'username': config.username,
+				'password': config.token
+			}
 		}
-	}
-	request
-		.get(options) // Pass options
-		.on('error', function(error) {console.log('Error downloading file '+file+' <'+uri+'>: '+error); return;}) //
-		.pipe(fs.createWriteStream(file)) // Write the pipe to a file stream
-		.on('finish', function() {
-			if (callback) {callback(file)} // Run the callback if it was passed
-		});
+		request
+			.get(options) // Pass options
+			.on('error', function(error) {console.log('Error downloading file '+file+' <'+uri+'>: '+error); return;}) //
+			.pipe(fs.createWriteStream(file)) // Write the pipe to a file stream
+			.on('finish', function() {
+				if (callback) {callback(file)} // Run the callback if it was passed
+			});
+		}
+	});
 }
 
 /**
