@@ -83,7 +83,7 @@ function resetPrompt(init) {
 /**
  * Takes a file path and checks if it exists
  * @param {string} file Path of the file to check
- * @callback callback A function to run which gets passed true (already exists) or false (doesn't exist) once async has finished executing
+ * @callback callback Passed true (already exists) or false (doesn't exist)
  */
 function check(file, callback) {
 	fs.stat(file, function(error, stat) {
@@ -100,7 +100,7 @@ function check(file, callback) {
 /**
  * Takes a file path and creates a directory structure for that path if it doesn't already exist
  * @param {string} file Path of the file to be converted into a directory structure
- * @param {(function|undefined)} callback A function to run which gets passed the created path once async has finished executing
+ * @param {(function|undefined)} callback Passed the created path
  */
 function mkdir(file, callback) {
 	var path = '';
@@ -119,7 +119,7 @@ function mkdir(file, callback) {
 /**
  * Takes a file path for a JSON file and returns it as an object in memory.
  * @param {string} file Path of the file to read
- * @callback callback A function to run which gets passed the parsed file once async has finished executing
+ * @callback callback Passed the parsed file
  */
 function read(file, callback) {
 	fs.readFile(file, function (error, data) {
@@ -138,7 +138,7 @@ function read(file, callback) {
  * Takes an URI and file name/path and downloads it to the specified path using your credentials
  * @param {string} uri Full URI for the content including protocol and path
  * @param {string} file Full or relative path where the downloaded content should be saved
- * @param {(function|undefined)} callback A function to run which gets passed the path where the content was saved once async has finished executing
+ * @param {(function|undefined)} callback Passed the path where the content was saved
  */
 function download(uri, file, callback) {
 	check(file, function(exists) {
@@ -165,7 +165,7 @@ function download(uri, file, callback) {
  * Takes an object and file name/path and saves it as JSON to the specified path
  * @param {Object} object An Object to convert and save as JSON
  * @param {string} file Full or relative path where the downloaded content should be saved
- * @param {(function|undefined)} callback A function to run which gets passed the path where the content was saved once async has finished executing
+ * @param {(function|undefined)} callback Passed the path where the content was saved
  */
 function save(object, file, callback) {
 	try {
