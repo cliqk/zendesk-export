@@ -124,7 +124,7 @@ function mkdir(file, callback) {
 
 /**
  * Takes a file path for a JSON file and returns it as an object in memory.
- * @param  {string}   path     the path of the file to read
+ * @param  {string}   file     the path of the file to read
  * @param  {function} callback a callback function which gets passed the parsed file
  * @return NULL
  */
