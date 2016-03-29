@@ -85,21 +85,41 @@ function resetPrompt() {
 }
 
 /**
- * Takes a file path and checks/creates a directory structure for that path
+ * Takes a file path and checks if it exists
+ * @param  {string}   file     the path of the file to check
+ * @param  {function} callback a callback function which will get passed true (already exists) or false (doesn't exist)
+ * @return NULL
+ */
+function check(file, callback) {
+	fs.stat(file, function(error, stat) {
+		if(error == null) {
+			callback(true);
+		} else if(error.code == 'ENOENT') {
+			callback(false);
+			mkdir(file, function(path){ console.log('creating path...')});
+		} else {
+			console.log('Error checking file: ', error.code);
+		}
+	});
+}
+
+/**
+ * Takes a file path and creates a directory structure for that path if it doesn't already exist
  * @param  {string}   file     the path of the file to be converted into a directory structure
  * @param  {function} callback a callback function which gets passed the created path
  * @return NULL
  */
-function check(file, callback) {
+function mkdir(file, callback) {
+	var path = '';
 	try {
-		var path = file.substring(0, file.lastIndexOf('/')); // Remove the filename from the end of the file path
+		path = file.substring(0, file.lastIndexOf('/')); // Remove the filename from the end of the file path
 	} catch(error) {
 		console.log(error);
 		return;
 	}
 	mkdirp(path, function (error) {
 		if (error) {console.log(error); return;}
-		callback(path); // Run the callback
+		if (callback) {callback(path)} // Run the callback if it was passed
 	});
 }
 
@@ -196,8 +216,10 @@ function getUsers() {
  */
 function saveUser(user) {
 	var file = 'data/users/'+user.id+'.json'; // Path for users JSON
-	check(file, function() { // Check to see if directory exists
-		save(user, file); // Save the data to the file
+	check(file, function(exists) { // Check to see if directory exists
+		if(!exists) {
+			save(user, file); // Save the data to the file
+		}
 	});
 }
 
@@ -232,8 +254,10 @@ function getTickets() {
  */
 function saveTicket(ticket) {
 	var file = 'data/tickets/'+ticket.id+'/ticket.json'; // Path for ticket JSON
-	check(file, function() { // Check to see if directory exists
-		save(ticket, file); // Save the data to the file
+	check(file, function(exists) { // Check to see if directory exists
+		if(!exists) {
+			save(ticket, file); // Save the data to the file
+		}
 		getComments(ticket.id); // Get the comments for this ticket
 	});
 }
@@ -261,8 +285,10 @@ function getComments(ticketId) {
  */
 function saveComment(comment, ticketId) {
 	var file = 'data/tickets/'+ticketId+'/comments/'+comment.id+'/comment.json'; // Path for comment JSON
-	check(file, function() { // Check to see if directory exists
-		save(comment, file); // Save the data to the file
+	check(file, function(exists) { // Check to see if directory exists
+		if(!exists) {
+			save(comment, file); // Save the data to the file
+		}
 		getCommentFiles(comment, ticketId);
 	});
 }
@@ -278,16 +304,20 @@ function getCommentFiles(comment, ticketId) {
 		for (var i = 0; i < comment.attachments.length; i++) {
 			var uri = comment.attachments[i].content_url;
 			var file = 'data/tickets/'+ticketId+'/comments/'+comment.id+'/attachments/'+comment.attachments[i].id+'/'+comment.attachments[i].file_name;
-			check(file, function() { // Check to see if directory exists
-				download(uri, file);
+			check(file, function(exists) { // Check to see if directory exists
+				if(!exists) {
+					download(uri, file);
+				}
 			});
 		}
 	}
 	if (typeof(comment.data) != 'undefined' && typeof(comment.data.recording_url) != 'undefined' && comment.data.recording_url) { // Check if this comment has a recording URL
 		var uri = comment.data.recording_url;
 		var file = 'data/tickets/'+ticketId+'/comments/'+comment.id+'/recordings/'+comment.data.call_id+'.mp3';
-		check(file, function() { // Check to see if directory exists
-			download(uri, file);
+		check(file, function(exists) { // Check to see if directory exists
+			if(!exists) {
+				download(uri, file);
+			}
 		});
 	}
 }
