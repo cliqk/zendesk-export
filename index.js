@@ -24,7 +24,7 @@ resetPrompt(true); // Run the command prompt init
 function resetPrompt(init) {
 	prompt.start();
 	if (init) {
-		prompt.message = colors.green('Zendesk Export\n©2016 Cliqk, Inc.\nMIT License\n(type help too see a list of commands)\n');
+		prompt.message = colors.magenta('Zendesk Export\n©2016 Cliqk, Inc.\nMIT License\n')+colors.gray('type help too see a list of commands\n');
 	} else {
 		prompt.message = '';
 	}
