@@ -14,14 +14,14 @@ var client = zendesk.createClient({
 	remoteUri: 'https://'+config.domain+'/api/v2'
 });
 
-initPrompt(true); // Run the command prompt init
+resetPrompt(true); // Run the command prompt init
 
 /**
  * Initializes the command prompt and handles which command to accept
  * @param BOOLEAN init if set, this is the initialization
  * @return NULL
  */
-function initPrompt(init) {
+function resetPrompt(init) {
 	prompt.start();
 	if (init) {
 		prompt.message = colors.green('Zendesk Export\n©2016 Cliqk, Inc.\nMIT License\n(type help too see a list of commands)\n');
@@ -79,10 +79,6 @@ function initPrompt(init) {
 		}
 		resetPrompt();
 	});
-}
-
-function resetPrompt() {
-	initPrompt();
 }
 
 /**
