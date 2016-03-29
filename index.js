@@ -142,7 +142,7 @@ function download(uri, file, callback) {
 		.on('error', function(error) { console.log(error); return;}) //
 		.pipe(fs.createWriteStream(file)) // Write the pipe to a file stream
 		.on('finish', function() {
-			if (callback) {callback(file)}; // Run the callback if it was passed
+			if (callback) {callback(file)} // Run the callback if it was passed
 		});
 }
 
@@ -162,7 +162,7 @@ function save(object, file, callback) {
 	}
 	fs.writeFile(file, data, function(error) {
 		if (error) {console.log(error); return;}
-		if (callback) { callback(file) }; // Run the callback if it was passed
+		if (callback) { callback(file) } // Run the callback if it was passed
 	});
 }
 
