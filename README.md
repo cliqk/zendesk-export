@@ -20,14 +20,16 @@ Upon running `node index.js` or `nodemon`, the application will connect to Zende
 ```
 data/
     users/
-        all-users.json (contains all users)
-        {user.id}.json (contains a single user)
+        {user.id}.json
     tickets/
-        all-tickets.json (contains all tickets without comments)
-        {ticket.id}.json (contains a single ticket without comments)
-        {ticket.id}-comments (contains all comments for a given ticket)
-        {ticket.id}-{comment-id}-{attachment.id}/ (contains an attachment for a given comment)
-            {attachment.file_name} (the actual file)
-```
+        {ticket.id}/ticket.json
+        {ticket.id}/
+            {comment.id}/
+                comment.json
+                attachments/
+                    {attachment.id}/
+                        {attachment.file_name}
+                recordings/
+                    {recording.id}.mp3
 
-*Note: some data is duplicated for convenience of later processing.*
+```
