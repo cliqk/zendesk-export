@@ -1,5 +1,5 @@
 {
-	"username":"user@domain.com",
+	"username":"user@domain.com/token",
 	"token":"12345",
 	"domain":"domain.zendesk.com"
 }
