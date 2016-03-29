@@ -15,7 +15,18 @@ A `config.json` file must be created in the root directory of the app before run
 *Note: your API token can be found in `Settings > API` on the Zendesk dashboard.*
 
 ## Usage
-Upon running `node index.js` or `nodemon`, the application will connect to Zendesk and download Users, Tickets, Comments, Attachments, and Voice Recordings to the `data` directory. Data is exported as JSON files in the following structure and formats:
+1. Run `node index.js` or `nodemon`
+2. Enter `{command} {parameter}` in the prompt
+
+### Examples
+* `users all` - saves all users
+* `users 123` - saves user with ID 123
+* `tickets all` - saves all tickets
+* `tickets 123` - saves ticket with ID 123
+
+You can download Users and Tickets, either all at once or a specific ID. Each user is contained in a separate JSON file. Tickets are stored in a folder with their Comments, Attachments, and Voice Recordings.
+
+Regardless of method, data is exported as JSON files in the following structure and formats:
 
 ```
 data/
