@@ -182,7 +182,7 @@ function getUser(userId) {
  * @return NULL
  */
 function getUsers() {
-	client.users.list(function (err, req, res) {
+	client.users.list(function (error, req, res) {
 		if (error) {console.log(error); return;}
 		for (var i = 0; i < res.length; i++) {
 			saveUser(res[i]);
