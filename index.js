@@ -222,7 +222,9 @@ function saveUser(user) {
 	var file = 'data/users/'+user.id+'.json'; // Path for users JSON
 	check(file, function(exists) { // Check to see if directory exists
 		if(!exists) {
-			save(user, file); // Save the data to the file
+			mkdir(file, function() {
+				save(user, file); // Save the data to the file
+			});
 		}
 	});
 }
