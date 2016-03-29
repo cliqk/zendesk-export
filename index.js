@@ -182,7 +182,7 @@ function save(object, file, callback) {
 
 /**
  * Gets a specific user from Zendesk and passes the user to the saveUser function
- * @param {int} userId The ID of the user to save
+ * @param {integer} userId The ID of the user to save
  */
 function getUser(userId) {
 	client.users.show(userId, function (error, req, res) {
@@ -220,7 +220,7 @@ function saveUser(user) {
 
 /**
  * Gets a specific ticket from Zendesk and passes the ticket to the saveTicket function
- * @param {int} ticketId The ID of the ticket to save
+ * @param {integer} ticketId The ID of the ticket to save
  */
 function getTicket(ticketId) {
 	client.tickets.show(ticketId, function (error, req, res) {
@@ -259,7 +259,7 @@ function saveTicket(ticket) {
 
 /**
  * Takes a ticket ID and gets all that ticket's comments from Zendesk, then passes each comment to the saveComment function
- * @param {int} ticketId The ID of the ticket which contains the desired comment(s)
+ * @param {integer} ticketId The ID of the ticket which contains the desired comment(s)
  */
 function getComments(ticketId) {
 	client.tickets.getComments(ticketId, function (error, req, res) {
