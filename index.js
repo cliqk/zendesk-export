@@ -60,6 +60,15 @@ function resetPrompt(init) {
 					console.error('Error: must pass a valid Ticket ID.\nExample: \'tickets 1\'');
 				}
 				break;
+			case 'downloads':
+				if(cmd[1] == 'start') {
+					downloadQueue.consume();
+					return;
+				}
+				if(cmd[1] == 'list') {
+					downloadQueue.list();
+				}
+				break;
 			case 'read':
 				read(cmd[1], function(file) {
 					console.log(file);
@@ -83,14 +92,14 @@ function resetPrompt(init) {
 /**
  * Takes a file path and checks if it exists
  * @param {string} file Path of the file to check
- * @callback callback Passed true (already exists) or false (doesn't exist)
+ * @callback callback Passed the original file path and true (already exists) or false (doesn't exist)
  */
 function check(file, callback) {
 	fs.stat(file, function(error, stat) {
 		if(error == null) {
-			callback(true);
+			callback(file, true);
 		} else if(error.code == 'ENOENT') {
-			callback(false);
+			callback(file, false);
 		} else {
 			console.log('Error checking file: ', error.code);
 		}
@@ -141,24 +150,62 @@ function read(file, callback) {
  * @callback callback Passed the path where the content was saved
  */
 function download(uri, file, callback) {
-	check(file, function(exists) {
+	check(file, function(file, exists) {
 		if (!exists) {
-		var options = { // Set request options
-			'uri': uri,
-			'auth': {
-				'username': config.username,
-				'password': config.token
-			}
-		}
-		request
-			.get(options) // Pass options
-			.on('error', function(error) {console.log('Error downloading file '+file+' <'+uri+'>: '+error); return;}) //
-			.pipe(fs.createWriteStream(file)) // Write the pipe to a file stream
-			.on('finish', function() {
-				if (callback) {callback(file)} // Run the callback if it was passed
+			mkdir(file, function(path) {
+				var options = { // Set request options
+					'uri': uri,
+					'auth': {
+						'username': config.username,
+						'password': config.token
+					}
+				}
+				request
+					.get(options) // Pass options
+					.on('error', function(error) {console.log('Error downloading file '+file+' <'+uri+'>: '+error); callback(); return;}) //
+					.pipe(fs.createWriteStream(file)) // Write the pipe to a file stream
+					.on('finish', function() {
+						if (callback) {callback()} // Run the callback if it was passed
+					});
 			});
+		} else {
+			callback();
 		}
 	});
+}
+
+/**
+ * Takes an URI and file name/path and adds it to the download queue to be downloaded at a later time
+ * @param {string} uri Full URI for the content including protocol and path
+ * @param {string} file Full or relative path where the downloaded content should be saved
+ * @callback callback Passed the path where the content was saved
+ */
+var downloadQueue = {
+	"count":0,
+	"queue": [],
+	"add" : function(uri, path) {
+		this.queue.push({'uri':uri,'path':path});
+	},
+	"consume" : function() {
+		console.log('Downloading '+this.queue[0].uri);
+		this.queue.shift();
+		if(this.queue.length > 0) {
+			download(this.queue[0].uri, this.queue[0].path, function(error) {
+				if(!error) {
+					downloadQueue.consume();
+				} else {
+					console.log('Error downloading file '+this.queue[0].uri);
+					resetPrompt();
+					return;
+				}
+			});
+		} else {
+			resetPrompt();
+		}
+	},
+	"list" : function() {
+		console.log(this.queue);
+	}
 }
 
 /**
@@ -209,7 +256,7 @@ function getUsers() {
  */
 function saveUser(user) {
 	var file = 'data/users/'+user.id+'.json'; // Path for users JSON
-	check(file, function(exists) { // Check to see if directory exists
+	check(file, function(path, exists) { // Check to see if directory exists
 		if(!exists) {
 			mkdir(file, function() {
 				save(user, file); // Save the data to the file
@@ -247,7 +294,7 @@ function getTickets() {
  */
 function saveTicket(ticket) {
 	var file = 'data/tickets/'+ticket.id+'/ticket.json'; // Path for ticket JSON
-	check(file, function(exists) { // Check to see if directory exists
+	check(file, function(path, exists) { // Check to see if directory exists
 		if(!exists) {
 			mkdir(file, function() {
 				save(ticket, file); // Save the data to the file
@@ -278,7 +325,7 @@ function getComments(ticketId) {
  */
 function saveComment(comment, ticketId) {
 	var file = 'data/tickets/'+ticketId+'/comments/'+comment.id+'/comment.json'; // Path for comment JSON
-	check(file, function(exists) { // Check to see if directory exists
+	check(file, function(path, exists) { // Check to see if directory exists
 		if(!exists) {
 			mkdir(file, function() {
 				save(comment, file); // Save the data to the file
@@ -298,24 +345,12 @@ function getCommentFiles(comment, ticketId) {
 		for (var i = 0; i < comment.attachments.length; i++) {
 			var uri = comment.attachments[i].content_url;
 			var file = 'data/tickets/'+ticketId+'/comments/'+comment.id+'/attachments/'+comment.attachments[i].id+'/'+comment.attachments[i].file_name;
-			check(file, function(exists) { // Check to see if directory exists
-				if(!exists) {
-					mkdir(file, function() {
-						download(uri, file);
-					});
-				}
-			});
+			downloadQueue.add(uri, file);
 		}
 	}
 	if (typeof(comment.data) != 'undefined' && typeof(comment.data.recording_url) != 'undefined' && comment.data.recording_url) { // Check if this comment has a recording URL
 		var uri = comment.data.recording_url;
 		var file = 'data/tickets/'+ticketId+'/comments/'+comment.id+'/recordings/'+comment.data.call_id+'.mp3';
-		check(file, function(exists) { // Check to see if directory exists
-			if(!exists) {
-				mkdir(file, function() {
-					download(uri, file);
-				});
-			}
-		});
+		downloadQueue.add(uri, file);
 	}
 }
